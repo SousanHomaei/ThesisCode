@@ -3,60 +3,42 @@
 import os
 import json
 import csv
+import pickle
 
-firstname = "name/data/firstname.csv"
-lastname = "name/data/lastname.csv"
+firstlist=[]
+lastlist=[]
+namelist=[]
 
-with open(firstname, "w") as outputfirst:
-    with open(lastname, "w") as outputlast:
-        for root, dirs, files in os.walk('aps-dataset-metadata-2016'):
+for root, dirs, files in os.walk('aps-dataset-metadata-2016'):
+    try:
             for name in files:
                  if name.endswith((".json")):
                     with open(os.path.join(root,name), 'r') as f:
                         data = json.load(f)
-                        if 'authors'in data:
-                            s=data.get('authors')
-                            for i in range(0,len(s)):
-                                if 'firstname' in s[i]:
+                        
+                        s=data.get('authors')
+                        for i in range(0,len(s)):
                                     fi=s[i].get('firstname')
-                                    if fi.isspace() or fi=='':
-                                            outputfirst.write('NON' + '\n')
-                                    else:
-                                            outputfirst.write(fi + '\n')
-                                else:
-                                    outputfirst.write('NON' + '\n')
-                                if 'surname' in s[i]:
                                     su=s[i].get('surname')
-                                    outputlast.write(su + '\n')
-                                else:
-                                    outputlast.write('NON' + '\n')
+                                    firstlist.append(fi)
+                                    lastlist.append(su)
+                                    namelist.append(fi+' '+su)
+    except:
+        continue
 
-import pandas as pd
-dff=pd.read_csv('name/data/firstname.csv',sep="\n")
-dfl=pd.read_csv('name/data/lastname.csv',sep="\n")
+output = open('name/data/firstlist.pkl', 'wb')
+pickle.dump(firstlist, output)
+output.close()
 
-firstlist=dff['firstname'].tolist()
+output = open('name/data/lastlist.pkl', 'wb')
+pickle.dump(lastlist, output)
+output.close()
 
-firstlist2=[]
-for i in range(0,len(firstlist)):
-    if firstlist[i]!='NON':
-        firstlist2.append(firstlist[i])
+with open('name/data/names.csv', "w") as output:
+    writer = csv.writer(output, lineterminator='\n')
+    for val in namelist:
+        writer.writerow([val])    
 
-setfirstlist2=set(firstlist2)
-
-firstlist=list(setfirstlist2)
-GenderizeInput=[]
-for i in range(0,len(firstlist)):
-    f=firstlist[i].split('+')[0]
-    fnsplit=f.split()
-    for j in range(0,len(fnsplit)):
-            if fnsplit[j].find('.')== -1 :
-                if fnsplit[j].find('-')== -1 :
-                        GenderizeInput.append(fnsplit[j])
-                else:
-                        fnsplit2=fnsplit[j].split('-')
-                        for h in range(0,len(fnsplit2)):
-                            GenderizeInput.append(fnsplit2[h])
 
 import pandas as pd
 import sys
@@ -181,7 +163,7 @@ if __name__ == "__main__":
 
     # example
 
-    name_list = GenderizeInput[1:10]
+    name_list = firstlist
 
     print("Fetching gender...")
 
@@ -196,3 +178,5 @@ for i in range(0,len(df)):
 output = open('name/data/namedict.pkl', 'wb')
 pickle.dump(di, output)
 output.close()
+
+
